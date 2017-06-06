@@ -100,3 +100,17 @@ describe('GET /todos/:id', () => {
     .end(done);
   });
 });
+
+describe('REMOVE /todos', () => {
+  it('should remove todo by id', (done) => {
+    var expected = todos[0];
+
+    request(app)
+    .delete(`/todos/${expected._id}`)
+    .expect(200)
+    .expect((res) => {
+      // expect(res.body.todo).toInclude(expected);
+    })
+    .end(done);
+  });
+});
