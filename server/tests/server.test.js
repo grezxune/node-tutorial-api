@@ -109,8 +109,26 @@ describe('REMOVE /todos', () => {
     .delete(`/todos/${expected._id}`)
     .expect(200)
     .expect((res) => {
-      // expect(res.body.todo).toInclude(expected);
     })
     .end(done);
   });
+});
+
+describe('PATCH /todos', () => {
+    it('should update a todo by id', (done) => {
+        var todo = todos[1];
+        var updatedTodo = {
+            'text': 'Updated from the tests!!!',
+            'completed': true
+        };
+
+        request(app)
+        .patch(`/todos/${todo._id}`)
+        .send(updatedTodo)
+        .expect(200)
+        .expect((res) => {
+            expect(res.body.todo).toInclude(updatedTodo);
+        })
+        .end(done);
+    });
 });
