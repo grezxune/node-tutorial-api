@@ -104,7 +104,27 @@ app.patch('/todos/:id', (req, res) => {
     }
 });
 
-app.get('/todos', (req, res) => {
+app.post('/users', (req, res) => {
+  var body = _.pick(req.body, ['email', 'password']);
+  var newUser = new User(body);
+
+  newUser.save().then(() => {
+    if (!newUser) {
+      res.status(400).send();
+    } else {
+      newUser.generateAuthToken();
+    }
+  }).then((token) => {
+      res.header('x-auth', token).send({newUser});
+  }).catch((err) => {
+    res.status(400).send(err);
+  });
+});
+
+app.get('/users', (req, res) => {
+  User.find().then((users) => {
+    res.send({users});
+  }).catch((err) => res.status(400).send());
 });
 
 app.listen(port, () => {
