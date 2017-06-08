@@ -112,10 +112,11 @@ app.post('/users', (req, res) => {
     if (!newUser) {
       res.status(400).send();
     } else {
-      newUser.generateAuthToken();
+      return newUser.generateAuthToken();
     }
   }).then((token) => {
-      res.header('x-auth', token).send({newUser});
+    console.log(token);
+    res.header('x-auth', token).send({newUser});
   }).catch((err) => {
     res.status(400).send(err);
   });
