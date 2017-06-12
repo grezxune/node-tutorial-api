@@ -4,6 +4,7 @@ const {ObjectID} = require('mongodb');
 
 const {app} = require('./../server');
 const {Todo} = require('./../models/todo');
+const {User} = require('./../models/user');
 
 const todos = [{
     _id: new ObjectID(),
@@ -13,10 +14,36 @@ const todos = [{
     text: 'Second test todo'
   }];
 
+ const users = [{
+     _id: new ObjectID(),
+     email: 'tomtrezb2003@gmail.com',
+     password: 'password01'
+     }, {
+    _id: new ObjectID(),
+    email: 'jeanna.j.diedrich@gmail.com',
+    password: 'password02'
+ }]
+
 beforeEach((done) => {
+  var asyncCount = 0;
+
+  asyncCount++;
   Todo.remove({}).then(() => {
     Todo.insertMany(todos);
-  }).then(() => done());
+    asyncCount--;
+    if(asyncCount === 0) {
+      done();
+    }
+  });
+
+  asyncCount++;
+  User.remove({}).then(() => {
+    User.insertMany(users);
+    asyncCount--;
+    if(asyncCount === 0) {
+      done();
+    }
+  });
 });
 
 describe('POST /todos', () => {
@@ -128,6 +155,24 @@ describe('PATCH /todos', () => {
         .expect(200)
         .expect((res) => {
             expect(res.body.todo).toInclude(updatedTodo);
+        })
+        .end(done);
+    });
+});
+
+describe('POST /users', () => {
+    it('should create a new user', (done) => {
+        var newUser = {
+            'email': 'tommy@playfree.io',
+            'password': 'password01'
+        };
+
+        request(app)
+        .post('/users')
+        .send(newUser)
+        .expect(200)
+        .expect((res) => {
+            expect(res.body.newUser).toInclude({email: newUser.email});
         })
         .end(done);
     });
