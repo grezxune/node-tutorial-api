@@ -1,10 +1,14 @@
 const expect = require('expect');
 const request = require('supertest');
 const {ObjectID} = require('mongodb');
+const jwt = require('jsonwebtoken');
 
 const {app} = require('./../server');
 const {Todo} = require('./../models/todo');
 const {User} = require('./../models/user');
+
+var userOneId = new ObjectID();
+var userTwoId = new ObjectID();
 
 const todos = [{
     _id: new ObjectID(),
@@ -15,11 +19,15 @@ const todos = [{
   }];
 
  const users = [{
-     _id: new ObjectID(),
+     _id: userOneId,
      email: 'tomtrezb2003@gmail.com',
-     password: 'password01'
+     password: 'password01',
+     tokens: [{
+       access: 'auth',
+       token: jwt.sign({_id: userOneId.toHexString(), access: 'auth'}, 'abc123').toString()
+     }]
      }, {
-    _id: new ObjectID(),
+    _id: userTwoId,
     email: 'jeanna.j.diedrich@gmail.com',
     password: 'password02'
  }]
@@ -158,6 +166,20 @@ describe('PATCH /todos', () => {
         })
         .end(done);
     });
+});
+
+describe('GET /users/me', () => {
+  it('should return user if authenticated', (done) => {
+    request(app)
+    .get('/users/me')
+    .set('x-auth', users[0].tokens[0].token)
+    .expect(200)
+    .expect((res) => {
+      expect(res.body._id).toBe(users[0]._id.toHexString());
+      expect(res.body.email).toBe(users[0].email);
+    })
+    .end(done);
+  });
 });
 
 describe('POST /users', () => {
