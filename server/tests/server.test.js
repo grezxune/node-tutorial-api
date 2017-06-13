@@ -12,10 +12,12 @@ var userTwoId = new ObjectID();
 
 const todos = [{
     _id: new ObjectID(),
-    text: 'First test todo'
+    text: 'First test todo',
+    _creator: userOneId
   }, {
     _id: new ObjectID(),
-    text: 'Second test todo'
+    text: 'Second test todo',
+    _creator: userTwoId
   }];
 
  const users = [{
@@ -24,7 +26,7 @@ const todos = [{
      password: 'password01',
      tokens: [{
        access: 'auth',
-       token: jwt.sign({_id: userOneId.toHexString(), access: 'auth'}, 'abc123').toString()
+       token: jwt.sign({_id: userOneId.toHexString(), access: 'auth'}, process.env.JWT_SECRET).toString()
      }]
      }, {
     _id: userTwoId,
@@ -60,6 +62,7 @@ describe('POST /todos', () => {
 
     request(app)
     .post('/todos')
+    .set('x-auth', users[0].tokens[0].token)
     .send({text})
     .expect(200)
     .expect((res) => {
@@ -81,6 +84,7 @@ describe('POST /todos', () => {
   it('should not create a new todo with invalid body data', (done) => {
     request(app)
     .post('/todos')
+    .set('x-auth', users[0].tokens[0].token)
     .send({})
     .expect(400)
     .end((err, res) => {
@@ -100,9 +104,10 @@ describe('GET /todos', () => {
   it('should get all todos', (done) => {
     request(app)
     .get('/todos')
+    .set('x-auth', users[0].tokens[0].token)
     .expect(200)
     .expect((res) => {
-      expect(res.body.todos.length).toBe(2);
+      expect(res.body.todos.length).toBe(1);
     })
     .end(done);
   });
@@ -111,8 +116,10 @@ describe('GET /todos', () => {
 describe('GET /todos/:id', () => {
   it('should get todo by id', (done) => {
     var expected = todos[0];
+    console.log(users[0].tokens[0].token);
     request(app)
     .get(`/todos/${expected._id}`)
+    .set('x-auth', users[0].tokens[0].token)
     .expect(200)
     .expect((res) => {
       expect(res.body.todo.text).toBe(expected.text);
@@ -124,6 +131,7 @@ describe('GET /todos/:id', () => {
   it('should return 404 if todo not found', (done) => {
     request(app)
     .get(`/todos/${new ObjectID().toHexString()}`)
+    .set('x-auth', users[0].tokens[0].token)
     .expect(404)
     .end(done);
   });
@@ -131,6 +139,7 @@ describe('GET /todos/:id', () => {
   it('should return 404 for non-object ids', (done) => {
     request(app)
     .get('/todos/123')
+    .set('x-auth', users[0].tokens[0].token)
     .expect(404)
     .end(done);
   });
@@ -142,6 +151,7 @@ describe('REMOVE /todos', () => {
 
     request(app)
     .delete(`/todos/${expected._id}`)
+    .set('x-auth', users[0].tokens[0].token)
     .expect(200)
     .expect((res) => {
     })

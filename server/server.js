@@ -29,9 +29,10 @@ app.use((req, res, next) => {
 });
 app.use(bodyParser.json());
 
-app.post('/todos', (req, res) => {
+app.post('/todos', authenticate, (req, res) => {
   var todo = new Todo({
-    text: req.body.text
+    text: req.body.text,
+    _creator: req.user._id
   });
 
   todo.save().then((doc) => {
@@ -41,8 +42,10 @@ app.post('/todos', (req, res) => {
   });
 });
 
-app.get('/todos', (req, res) => {
-  Todo.find().then((todos) => {
+app.get('/todos', authenticate, (req, res) => {
+  Todo.find({
+    _creator: req.user._id
+  }).then((todos) => {
     res.send({
       todos: todos
     });
@@ -51,14 +54,16 @@ app.get('/todos', (req, res) => {
   });
 });
 
-app.get('/todos/:id', (req, res) => {
+app.get('/todos/:id', authenticate, (req, res) => {
   var isValidID = ObjectID.isValid(req.params.id);
   if (isValidID) {
     Todo.findById(req.params.id).then((todo) => {
       if (!todo) {
         res.status(404).send();
-      } else {
+      } else if (todo._creator == req.user._id){
         res.send({todo});
+      } else {
+        res.status(400).send();
       }
     }).catch((e) => res.status(400).send());
   } else {
@@ -66,7 +71,7 @@ app.get('/todos/:id', (req, res) => {
   }
 });
 
-app.delete('/todos/:id', (req, res) => {
+app.delete('/todos/:id', authenticate, (req, res) => {
   var isValidID = ObjectID.isValid(req.params.id);
   if (isValidID) {
     Todo.findByIdAndRemove(req.params.id).then((todo) => {
